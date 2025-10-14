@@ -32,17 +32,25 @@
     <!-- Start Screen -->
     <div id="start-screen">
         <div class="start-content">
-            <h1 class="title-glitch" data-text="IRON PORTFOLIO">IRON PORTFOLIO</h1>
+            <h1 class="title-glitch" data-text="IRON PORTFOLIO">Aditya Kurani PORTFOLIO</h1>
             <h2 class="subtitle">Aditya Kurani - Interactive Developer Experience</h2>
             <div class="instructions">
-                <p><span class="key">WASD</span> - Move</p>
+                <div>
+                    <p><span class="key">WASD</span> - Move</p>
                 <p><span class="key">F</span> - Toggle Flight</p>
-                <p><span class="key">SPACE/SHIFT</span> - Up/Down (Flying)</p>
+                </div>
+                <div>
+                    <p><span class="key">SPACE/SHIFT</span> - Up/Down (Flying)</p>
                 <p><span class="key">MOUSE</span> - Look Around</p>
-                <p><span class="key">LEFT CLICK</span> - Repulsor</p>
+                </div>
+                <div>
+                    <p><span class="key">LEFT CLICK</span> - Repulsor</p>
                 <p><span class="key">RIGHT CLICK</span> - Beam</p>
-                <p><span class="key">M</span> - Missiles</p>
+                </div>
+                <div>
+                    <p><span class="key">M</span> - Missiles</p>
                 <p><span class="key">Q</span> - Slow-Mo</p>
+                </div>
                 <p><span class="key">V</span> - Mute/Unmute</p>
             </div>
             <button id="start-button" class="neon-button">
@@ -70,7 +78,46 @@
                     <span class="stat-value" id="energy-value">100</span>
                 </div>
                 <div class="controls">
-                    
+                    <div class="control-row">
+                        <span class="control-key">WASD</span>
+                        <span class="control-desc">Move</span>
+                    </div>
+                    <div class="control-row">
+                        <span class="control-key">F</span>
+                        <span class="control-desc">Flight</span>
+                    </div>
+                    <div class="control-row">
+                        <span class="control-key">SPACE</span>
+                        <span class="control-desc">Up</span>
+                    </div>
+                    <div class="control-row">
+                        <span class="control-key">SHIFT</span>
+                        <span class="control-desc">Down</span>
+                    </div>
+                    <div class="control-row">
+                        <span class="control-key">MOUSE</span>
+                        <span class="control-desc">Look</span>
+                    </div>
+                    <div class="control-row">
+                        <span class="control-key">L-CLICK</span>
+                        <span class="control-desc">Repulsor</span>
+                    </div>
+                    <div class="control-row">
+                        <span class="control-key">R-CLICK</span>
+                        <span class="control-desc">Beam</span>
+                    </div>
+                    <div class="control-row">
+                        <span class="control-key">M</span>
+                        <span class="control-desc">Missiles</span>
+                    </div>
+                    <div class="control-row">
+                        <span class="control-key">Q</span>
+                        <span class="control-desc">Slow-Mo</span>
+                    </div>
+                    <div class="control-row">
+                        <span class="control-key">V</span>
+                        <span class="control-desc">Mute</span>
+                    </div>
                 </div>
             </div>
             <div class="hud-center">
@@ -149,9 +196,10 @@
     <div id="data-popup" class="data-popup">
         <div class="popup-content">
             <div class="popup-header">
-                <span class="popup-icon">📊</span>
+                <!-- <span class="popup-icon">📊</span> -->
                 <span class="popup-title">DATA FRAGMENT ACQUIRED</span>
             </div>
+            
             <div class="popup-body" id="popup-body"></div>
             <div class="popup-footer">
                 <div class="scan-line"></div>
@@ -223,7 +271,7 @@
     <div id="gameover-screen" style="display: none;">
         <div class="gameover-content">
             <h1 class="gameover-title">Thanos won</h1>
-            <p class="gameover-text">Retry SNAP</p>
+            <p class="gameover-text"></p>
             <button id="retry-button" class="neon-button">
                 <span>RETRY MISSION</span>
             </button>

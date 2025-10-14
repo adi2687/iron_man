@@ -73,19 +73,20 @@ const gameState = {
 
 // Portfolio Data
 const portfolioData = [
-    "🎯 Aditya Kurani — Innovative Software Engineer",
-    "🤖 Creator of Wardrobe AI Assistant (AI-based outfit recommender)",
-    "💻 Experienced in MERN Stack: MongoDB, Express, React, Node.js",
-    "🧠 Specialized in AI integration and machine learning applications",
-    "☁️ Passionate about decentralized cloud systems",
-    "🔧 Built scalable backend architectures with Node.js",
-    "⚡ Expert in real-time data processing with Redis",
-    "🎨 Creates intuitive, user-centric interfaces",
-    "🚀 Believes in building smarter, human-centric technology",
-    "📊 Data-driven problem solver with analytical mindset",
-    "🌐 Full-stack developer with end-to-end project experience",
-    "💡 Innovator focused on practical AI solutions"
+  "🎯 Aditya Kurani — Software Engineer | Innovator | AI Developer",
+  "🎓 B.Tech CSE @ IIIT Nagpur (2023–2027) • CGPA: 8.10",
+  "💻 MERN Stack • AI Integration • System Design • DSA (350+ LeetCode)",
+  "🧠 Creator of Outfit-AI (AI outfit recommender) & NOVA (Virtual AI Assistant)",
+  "⚙️ Skilled in React, Node.js, Express, MongoDB, Python, FastAPI, Docker",
+  "☁️ Passionate about decentralized cloud & real-time systems",
+  "📱 Built scalable, AI-driven, and user-centric applications",
+  "🚀 Vision-driven developer focused on building smarter, human-centric tech",
+  "💬 Built cutsom cache for a real time chatting application",
+  "🏆 Hackathon Achievements: Top 5 @ IIITM Gwalior | Top 50 @ Medecro.ai",
+  "💼 Full Stack Developer — QuickIntell | Backend Intern — eSubhalekha",
+  "🌐 Portfolio: aditya_kurani_portfolio.com | GitHub: AdityaKurani | LinkedIn: AdityaKurani"
 ];
+
 
 // Custom Cursor
 const customCursor = document.getElementById('custom-cursor');
@@ -1929,8 +1930,7 @@ function damageEnemy(enemy, baseDamage) {
             gameState.killCount++;
             addCombo();
             
-            // Kill sound
-            playSound(200, 0.2, 'sawtooth');
+            // Kill sound removed
             
             // Chance to drop pickup
             spawnPickup(enemy.mesh.position);
