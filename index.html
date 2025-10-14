@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aditya Kurani - Interactive Portfolio</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <!-- Custom Cursor -->
+    <div class="custom-cursor" id="custom-cursor"></div>
+    
+    <!-- Loading Screen -->
+    <div id="loading-screen">
+        <div class="loading-content">
+            <div class="arc-reactor">
+                <div class="reactor-core"></div>
+                <div class="reactor-ring"></div>
+                <div class="reactor-ring-2"></div>
+            </div>
+            <h1 class="glitch" data-text="INITIALIZING ADITYA KURANI PROTOCOL">INITIALIZING ADITYA KURANI PROTOCOL</h1>
+            <div class="loading-bar">
+                <div class="loading-progress" id="loading-progress"></div>
+            </div>
+            <p id="loading-text">Loading assets...</p>
+        </div>
+    </div>
+
+    <!-- Start Screen -->
+    <div id="start-screen">
+        <div class="start-content">
+            <h1 class="title-glitch" data-text="IRON PORTFOLIO">IRON PORTFOLIO</h1>
+            <h2 class="subtitle">Aditya Kurani - Interactive Developer Experience</h2>
+            <div class="instructions">
+                <p><span class="key">WASD</span> - Move</p>
+                <p><span class="key">F</span> - Toggle Flight</p>
+                <p><span class="key">SPACE/SHIFT</span> - Up/Down (Flying)</p>
+                <p><span class="key">MOUSE</span> - Look Around</p>
+                <p><span class="key">LEFT CLICK</span> - Repulsor</p>
+                <p><span class="key">RIGHT CLICK</span> - Beam</p>
+                <p><span class="key">M</span> - Missiles</p>
+                <p><span class="key">Q</span> - Slow-Mo</p>
+                <p><span class="key">V</span> - Mute/Unmute</p>
+            </div>
+            <button id="start-button" class="neon-button">
+                <span>INITIALIZE PROTOCOL</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- Game HUD -->
+    <div id="hud" style="display: none;">
+        <div class="hud-top">
+            <div class="hud-left">
+                <div class="stat-bar">
+                    <span class="stat-label">SHIELD</span>
+                    <div class="bar-container">
+                        <div class="bar shield-bar" id="shield-bar"></div>
+                    </div>
+                    <span class="stat-value" id="shield-value">100</span>
+                </div>
+                <div class="stat-bar">
+                    <span class="stat-label">ENERGY</span>
+                    <div class="bar-container">
+                        <div class="bar energy-bar" id="energy-bar"></div>
+                    </div>
+                    <span class="stat-value" id="energy-value">100</span>
+                </div>
+                <div class="controls">
+                    
+                </div>
+            </div>
+            <div class="hud-center">
+                <div class="crosshair">
+                    <div class="crosshair-dot"></div>
+                    <div class="crosshair-line crosshair-top"></div>
+                    <div class="crosshair-line crosshair-right"></div>
+                    <div class="crosshair-line crosshair-bottom"></div>
+                    <div class="crosshair-line crosshair-left"></div>
+                </div>
+            </div>
+            <div class="hud-right">
+                <div class="score-display">
+                    <span class="score-label">DATA FRAGMENTS</span>
+                    <span class="score-value" id="score-value">0 / 12</span>
+                </div>
+                <div class="enemy-counter">
+                    <span class="enemy-label">THREATS</span>
+                    <span class="enemy-value" id="enemy-value">0</span>
+                </div>
+                <div class="wave-display">
+                    <span class="wave-label">WAVE</span>
+                    <span class="wave-value" id="wave-value">1</span>
+                </div>
+                <div class="kill-display">
+                    <span class="kill-label">ELIMINATIONS</span>
+                    <span class="kill-value" id="kill-value">0</span>
+                </div>
+                <div class="flight-display">
+                    <span class="flight-label">MODE</span>
+                    <span class="flight-value" id="flight-mode">GROUND</span>
+                </div>
+                <div class="mute-display">
+                    <span class="mute-label">AUDIO</span>
+                    <span class="mute-value" id="mute-indicator">🔊 AUDIO</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="hud-bottom">
+            <div class="objective" id="objective">
+                <span class="objective-icon">⚡</span>
+                <span id="objective-text">Eliminate hostile AI constructs</span>
+            </div>
+        </div>
+        
+        <!-- Combo Display -->
+        <div id="combo-display" class="combo-display" style="display: none;">
+            <div class="combo-text" id="combo-text">2x COMBO</div>
+        </div>
+        
+        <!-- Wave Intro -->
+        <div id="wave-intro" class="wave-intro" style="display: none;">
+            <h1 class="wave-intro-title" id="wave-intro-title">WAVE 1</h1>
+            <p class="wave-intro-subtitle">Incoming Hostiles</p>
+        </div>
+        
+        <!-- Damage Numbers Container -->
+        <div id="damage-numbers" class="damage-numbers"></div>
+        
+        <!-- Mobile Controls -->
+        <div id="mobile-controls" class="mobile-controls">
+            <div class="mobile-joystick" id="joystick">
+                <div class="joystick-inner"></div>
+            </div>
+            <div class="mobile-buttons">
+                <button class="mobile-btn shoot-btn" id="mobile-shoot">SHOOT</button>
+                <button class="mobile-btn beam-btn" id="mobile-beam">BEAM</button>
+                <button class="mobile-btn missile-btn" id="mobile-missile">MISSILE</button>
+                <button class="mobile-btn slow-btn" id="mobile-slow">SLOW-MO</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Data Fragment Popup -->
+    <div id="data-popup" class="data-popup">
+        <div class="popup-content">
+            <div class="popup-header">
+                <span class="popup-icon">📊</span>
+                <span class="popup-title">DATA FRAGMENT ACQUIRED</span>
+            </div>
+            <div class="popup-body" id="popup-body"></div>
+            <div class="popup-footer">
+                <div class="scan-line"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Boss Health Bar -->
+    <div id="boss-health" class="boss-health" style="display: none;">
+        <div class="boss-name" id="boss-name">SYSTEM OVERLOAD</div>
+        <div class="boss-bar-container">
+            <div class="boss-bar" id="boss-bar"></div>
+        </div>
+    </div>
+
+    <!-- Victory Screen -->
+    <div id="victory-screen" style="display: none;">
+        <div class="victory-content">
+            <h1 class="victory-title">PROTOCOL COMPLETE</h1>
+            
+            <!-- Mission Stats -->
+            <div class="stats-container">
+                <h2 class="stats-title">MISSION STATISTICS</h2>
+                <div class="stats-grid">
+                    <div class="stat-item">
+                        <span class="stat-label">Eliminations</span>
+                        <span class="stat-value" id="final-kills">0</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">Accuracy</span>
+                        <span class="stat-value" id="final-accuracy">0%</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">Max Combo</span>
+                        <span class="stat-value" id="final-combo">0x</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">Time</span>
+                        <span class="stat-value" id="final-time">0:00</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="quote-container">
+                <p class="quote">"The future is engineered — not imagined."</p>
+                <p class="quote-author">— Aditya Kurani</p>
+            </div>
+            <div class="links-container">
+                <a href="https://github.com/adityakurani" target="_blank" class="link-button github">
+                    <span class="link-icon">💻</span>
+                    <span>GitHub</span>
+                </a>
+                <a href="https://linkedin.com/in/adityakurani" target="_blank" class="link-button linkedin">
+                    <span class="link-icon">💼</span>
+                    <span>LinkedIn</span>
+                </a>
+                <a href="https://adityakurani.com" target="_blank" class="link-button portfolio">
+                    <span class="link-icon">🌐</span>
+                    <span>Portfolio</span>
+                </a>
+            </div>
+            <button id="restart-button" class="neon-button">
+                <span>RESTART PROTOCOL</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- Game Over Screen -->
+    <div id="gameover-screen" style="display: none;">
+        <div class="gameover-content">
+            <h1 class="gameover-title">Thanos won</h1>
+            <p class="gameover-text">Retry SNAP</p>
+            <button id="retry-button" class="neon-button">
+                <span>RETRY MISSION</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- Three.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <!-- Three.js Loaders -->
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/OBJLoader.js"></script>
+    <script src="game.js"></script>
+</body>
+</html>
