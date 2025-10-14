@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Aditya Kurani - Interactive Portfolio</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="icon" href="logo.png">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="styles.css">
@@ -51,11 +52,20 @@
                     <p><span class="key">M</span> - Missiles</p>
                 <p><span class="key">Q</span> - Slow-Mo</p>
                 </div>
+                <div>
+                    <p><span class="key">TAB</span> - Switch Weapon</p>
+                <p><span class="key">E</span> - Dash</p>
+                </div>
                 <p><span class="key">V</span> - Mute/Unmute</p>
             </div>
-            <button id="start-button" class="neon-button">
-                <span>INITIALIZE PROTOCOL</span>
-            </button>
+            <div class="button-group">
+                <button id="start-button" class="neon-button">
+                    <span>INITIALIZE PROTOCOL</span>
+                </button>
+                <button id="settings-button" class="neon-button settings-btn">
+                    <span>SETTINGS</span>
+                </button>
+            </div>
         </div>
     </div>
 
@@ -76,6 +86,13 @@
                         <div class="bar energy-bar" id="energy-bar"></div>
                     </div>
                     <span class="stat-value" id="energy-value">100</span>
+                </div>
+                <div class="stat-bar">
+                    <span class="stat-label">EXP</span>
+                    <div class="bar-container">
+                        <div class="bar exp-bar" id="experience-bar"></div>
+                    </div>
+                    <span class="stat-value" id="exp-value">0</span>
                 </div>
                 <div class="controls">
                     <div class="control-row">
@@ -151,8 +168,20 @@
                     <span class="flight-value" id="flight-mode">GROUND</span>
                 </div>
                 <div class="mute-display">
-                    <span class="mute-label">AUDIO</span>
+                    <span class="mute-label">AUDIO (V)</span>
                     <span class="mute-value" id="mute-indicator">🔊 AUDIO</span>
+                </div>
+                <div class="weapon-display">
+                    <span class="weapon-label">WEAPON</span>
+                    <span class="weapon-value" id="weapon-mode">REPULSOR</span>
+                </div>
+                <div class="dash-display">
+                    <span class="dash-label">DASH (E)</span>
+                    <span class="dash-value" id="dash-cooldown">READY</span>
+                </div>
+                <div class="level-display">
+                    <span class="level-label">LEVEL</span>
+                    <span class="level-value" id="level-display">LVL 1</span>
                 </div>
             </div>
         </div>
@@ -197,7 +226,7 @@
         <div class="popup-content">
             <div class="popup-header">
                 <!-- <span class="popup-icon">📊</span> -->
-                <span class="popup-title">DATA FRAGMENT ACQUIRED</span>
+                <span class="popup-title">MORE ABOUT ME</span>
             </div>
             
             <div class="popup-body" id="popup-body"></div>
@@ -275,6 +304,57 @@
             <button id="retry-button" class="neon-button">
                 <span>RETRY MISSION</span>
             </button>
+        </div>
+    </div>
+
+    <!-- Settings Modal -->
+    <div id="settings-modal" class="settings-modal" style="display: none;">
+        <div class="settings-content">
+            <h2 class="settings-title">SETTINGS</h2>
+            
+            <div class="settings-section">
+                <h3>Graphics Quality</h3>
+                <select id="graphics-quality">
+                    <option value="low">Low</option>
+                    <option value="medium">Medium</option>
+                    <option value="high" selected>High</option>
+                    <option value="ultra">Ultra</option>
+                </select>
+            </div>
+            
+            <div class="settings-section">
+                <h3>Audio</h3>
+                <div class="audio-controls">
+                    <label>Master Volume: <span id="master-volume-value">80</span>%</label>
+                    <input type="range" id="master-volume" min="0" max="100" value="80">
+                    
+                    <label>SFX Volume: <span id="sfx-volume-value">70</span>%</label>
+                    <input type="range" id="sfx-volume" min="0" max="100" value="70">
+                    
+                    <label>Music Volume: <span id="music-volume-value">50</span>%</label>
+                    <input type="range" id="music-volume" min="0" max="100" value="50">
+                </div>
+            </div>
+            
+            <div class="settings-section">
+                <h3>Weather</h3>
+                <select id="weather-type">
+                    <option value="clear" selected>Clear</option>
+                    <option value="storm">Storm</option>
+                    <option value="fog">Fog</option>
+                    <option value="snow">Snow</option>
+                </select>
+            </div>
+            
+            
+            <div class="settings-buttons">
+                <button id="apply-settings" class="neon-button">
+                    <span>APPLY</span>
+                </button>
+                <button id="close-settings" class="neon-button">
+                    <span>CLOSE</span>
+                </button>
+            </div>
         </div>
     </div>
 

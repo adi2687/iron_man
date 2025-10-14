@@ -22,7 +22,21 @@ const gameState = {
         friction: 0.85,
         mouseSensitivity: 0.002,
         maxShield: 100,
-        shield: 100
+        shield: 100,
+        // Enhanced features
+        dashCooldown: 0,
+        dashDuration: 0,
+        isDashing: false,
+        dashSpeed: 0.8,
+        weaponMode: 'repulsor', // 'repulsor', 'beam', 'missile'
+        weaponCooldowns: {
+            repulsor: 0,
+            beam: 0,
+            missile: 0
+        },
+        experience: 0,
+        level: 1,
+        skillPoints: 0
     },
     slowMotion: {
         active: false,
@@ -68,7 +82,49 @@ const gameState = {
         shield: { active: false, timeLeft: 0, duration: 12 }
     },
     critChance: 0.15,
-    critMultiplier: 2.5
+    critMultiplier: 2.5,
+    // Enhanced features
+    settings: {
+        graphics: 'high', // 'low', 'medium', 'high', 'ultra'
+        particles: true,
+        shadows: false,
+        postProcessing: true,
+        soundEffects: true,
+        music: true
+    },
+    achievements: [],
+    challenges: [],
+    weather: {
+        type: 'clear', // 'clear', 'storm', 'fog', 'snow'
+        intensity: 0.5
+    },
+    timeOfDay: 0, // 0-1 (0 = midnight, 0.5 = noon)
+    dynamicLighting: true,
+    postProcessing: {
+        bloom: true,
+        ssao: false,
+        dof: false
+    },
+    // Enhanced audio
+    audioManager: {
+        masterVolume: 0.8,
+        sfxVolume: 0.7,
+        musicVolume: 0.5
+    },
+    // Enhanced UI
+    ui: {
+        showFPS: false,
+        showDebug: false,
+        minimap: true,
+        radar: true
+    },
+    // Performance tracking
+    performance: {
+        fps: 0,
+        frameCount: 0,
+        lastTime: 0,
+        frameTime: 0
+    }
 };
 
 // Portfolio Data
@@ -84,7 +140,7 @@ const portfolioData = [
   "💬 Built cutsom cache for a real time chatting application",
   "🏆 Hackathon Achievements: Top 5 @ IIITM Gwalior | Top 50 @ Medecro.ai",
   "💼 Full Stack Developer — QuickIntell | Backend Intern — eSubhalekha",
-  "🌐 Portfolio: aditya_kurani_portfolio.com | GitHub: AdityaKurani | LinkedIn: AdityaKurani"
+  "🌐 Portfolio: aditya_kurani.vercel.app | GitHub: adi8798 | LinkedIn: adi2687"
 ];
 
 
@@ -99,29 +155,47 @@ document.addEventListener('mousemove', (e) => {
 let audioContext = null;
 let audioFiles = {};
 
-// Load audio files
+// Audio System with existing files
 function loadAudioFiles() {
     // Load repulsor sound
     const repulsorSound = new Audio('iron-man-repulsor-157371 (3).mp3');
     repulsorSound.volume = 0.3;
+    repulsorSound.preload = 'auto';
     audioFiles.repulsor = repulsorSound;
     
     // Load missile sound
     const missileSound = new Audio('missile.mp3');
     missileSound.volume = 0.4;
+    missileSound.preload = 'auto';
     audioFiles.missile = missileSound;
     
     console.log('✅ Audio files loaded!');
 }
 
-// Play audio file
-function playAudioFile(soundName) {
-    if (gameState.audioMuted) return;
+
+// Audio Playback with existing files
+function playAudioFile(soundName, volume = 1) {
+    if (gameState.audioMuted || !gameState.audioManager.sfxVolume) return;
+    
     if (audioFiles[soundName]) {
         const sound = audioFiles[soundName].cloneNode();
-        sound.volume = audioFiles[soundName].volume;
+        sound.volume = audioFiles[soundName].volume * volume * gameState.audioManager.sfxVolume;
         sound.play().catch(e => console.log('Audio play failed:', e));
+    } else {
+        // Fallback to generated sound
+        playSound(800, 0.1, 'square');
     }
+}
+
+// Positional Audio with existing files
+function playPositionalAudio(soundName, position, volume = 1) {
+    if (gameState.audioMuted) return;
+    
+    const distance = gameState.camera.position.distanceTo(position);
+    const maxDistance = 50;
+    const volumeMultiplier = Math.max(0, 1 - (distance / maxDistance));
+    
+    playAudioFile(soundName, volume * volumeMultiplier);
 }
 
 // 3D Model Loader
@@ -623,6 +697,7 @@ function playSound(frequency, duration, type = 'sine') {
 
 // Initialize
 window.addEventListener('load', () => {
+    loadSavedSettings();
     initLoading();
 });
 
@@ -659,11 +734,102 @@ document.getElementById('start-button').addEventListener('click', startGame);
 document.getElementById('restart-button')?.addEventListener('click', restartGame);
 document.getElementById('retry-button')?.addEventListener('click', restartGame);
 
+// Settings
+document.getElementById('settings-button').addEventListener('click', openSettings);
+document.getElementById('close-settings').addEventListener('click', closeSettings);
+document.getElementById('apply-settings').addEventListener('click', applySettings);
+
+// Settings functionality
+function openSettings() {
+    document.getElementById('settings-modal').style.display = 'flex';
+    loadSettings();
+}
+
+function closeSettings() {
+    document.getElementById('settings-modal').style.display = 'none';
+}
+
+function loadSettings() {
+    document.getElementById('graphics-quality').value = gameState.settings.graphics;
+    document.getElementById('weather-type').value = gameState.weather.type;
+    document.getElementById('master-volume').value = gameState.audioManager.masterVolume * 100;
+    document.getElementById('sfx-volume').value = gameState.audioManager.sfxVolume * 100;
+    document.getElementById('music-volume').value = gameState.audioManager.musicVolume * 100;
+    
+    updateVolumeDisplays();
+}
+
+function updateVolumeDisplays() {
+    document.getElementById('master-volume-value').textContent = document.getElementById('master-volume').value;
+    document.getElementById('sfx-volume-value').textContent = document.getElementById('sfx-volume').value;
+    document.getElementById('music-volume-value').textContent = document.getElementById('music-volume').value;
+}
+
+
+function applySettings() {
+    // Apply graphics settings
+    gameState.settings.graphics = document.getElementById('graphics-quality').value;
+    
+    // Apply weather settings
+    gameState.weather.type = document.getElementById('weather-type').value;
+    
+    // Apply audio settings
+    gameState.audioManager.masterVolume = document.getElementById('master-volume').value / 100;
+    gameState.audioManager.sfxVolume = document.getElementById('sfx-volume').value / 100;
+    gameState.audioManager.musicVolume = document.getElementById('music-volume').value / 100;
+    
+    // Save to localStorage
+    localStorage.setItem('gameSettings', JSON.stringify(gameState.settings));
+    localStorage.setItem('gameWeather', JSON.stringify(gameState.weather));
+    localStorage.setItem('gameAudio', JSON.stringify(gameState.audioManager));
+    
+    showNotification('⚙️ SETTINGS APPLIED', '#00ffff');
+    closeSettings();
+}
+
+// Load saved settings on startup
+function loadSavedSettings() {
+    const savedSettings = localStorage.getItem('gameSettings');
+    const savedWeather = localStorage.getItem('gameWeather');
+    const savedAudio = localStorage.getItem('gameAudio');
+    
+    if (savedSettings) {
+        gameState.settings = { ...gameState.settings, ...JSON.parse(savedSettings) };
+    }
+    if (savedWeather) {
+        gameState.weather = { ...gameState.weather, ...JSON.parse(savedWeather) };
+    }
+    if (savedAudio) {
+        gameState.audioManager = { ...gameState.audioManager, ...JSON.parse(savedAudio) };
+    }
+}
+
+// Volume slider event listeners
+document.getElementById('master-volume').addEventListener('input', updateVolumeDisplays);
+document.getElementById('sfx-volume').addEventListener('input', updateVolumeDisplays);
+document.getElementById('music-volume').addEventListener('input', updateVolumeDisplays);
+
+
 function startGame() {
     document.getElementById('start-screen').style.display = 'none';
     document.getElementById('hud').style.display = 'block';
     gameState.gameStarted = true;
     gameState.startTime = Date.now();
+    
+    // Reset player state
+    gameState.player.position.set(0, 2, 0);
+    gameState.player.isFlying = false;
+    gameState.player.verticalVelocity = 0;
+    gameState.mouse.x = 0;
+    gameState.mouse.y = 0;
+    
+    // Clear any stuck keys
+    gameState.keys = {};
+    
+    // Clear movement keys specifically
+    ['w', 'a', 's', 'd'].forEach(key => {
+        gameState.keys[key] = false;
+    });
     
     initThree();
     initControls();
@@ -694,7 +860,7 @@ function showWaveIntro(waveNumber) {
     }
     
     waveIntro.style.display = 'flex';
-    playSound(440, 0.2, 'square');
+    // Removed extra sound
     
     setTimeout(() => {
         waveIntro.style.display = 'none';
@@ -714,7 +880,7 @@ function addCombo() {
     
     if (gameState.combo >= 2) {
         showComboDisplay();
-        playSound(600 + (gameState.combo * 50), 0.1, 'sine');
+        // Removed combo sound
     }
 }
 
@@ -750,21 +916,34 @@ function initThree() {
     gameState.camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
     gameState.camera.position.copy(gameState.player.position);
     
-    // Renderer with enhanced settings
+    // Enhanced Renderer with quality settings
+    const graphicsQuality = gameState.settings.graphics;
+    const pixelRatio = graphicsQuality === 'ultra' ? window.devicePixelRatio : 
+                      graphicsQuality === 'high' ? Math.min(window.devicePixelRatio, 2) :
+                      graphicsQuality === 'medium' ? Math.min(window.devicePixelRatio, 1.5) : 1;
+    
     gameState.renderer = new THREE.WebGLRenderer({ 
-        antialias: true,
+        antialias: graphicsQuality !== 'low',
         alpha: true,
         powerPreference: "high-performance",
-        logarithmicDepthBuffer: true
+        logarithmicDepthBuffer: graphicsQuality === 'ultra',
+        precision: graphicsQuality === 'ultra' ? 'highp' : 'mediump'
     });
+    
     gameState.renderer.setSize(window.innerWidth, window.innerHeight);
-    gameState.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    gameState.renderer.setPixelRatio(pixelRatio);
     gameState.renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    gameState.renderer.toneMappingExposure = 1.5;
+    gameState.renderer.toneMappingExposure = graphicsQuality === 'ultra' ? 1.8 : 1.5;
     gameState.renderer.outputEncoding = THREE.sRGBEncoding;
     gameState.renderer.setClearColor(0x000510);
-    // Shadows disabled for performance
-    gameState.renderer.shadowMap.enabled = false;
+    
+    // Dynamic shadow settings
+    if (graphicsQuality === 'ultra' || graphicsQuality === 'high') {
+        gameState.renderer.shadowMap.enabled = true;
+        gameState.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    } else {
+        gameState.renderer.shadowMap.enabled = false;
+    }
     document.body.appendChild(gameState.renderer.domElement);
     
     // Clock
@@ -912,7 +1091,7 @@ function createGauntlet() {
 }
 
 function createDataScreens() {
-    for (let i = 0; i < 8; i++) {
+    for (let i = 0; i < 6; i++) { // Reduced from 8
         const geometry = new THREE.PlaneGeometry(2.5, 1.8);
         const material = new THREE.MeshBasicMaterial({
             color: 0x00ffff,
@@ -938,7 +1117,7 @@ function createDataScreens() {
 function createNeonStructures() {
     gameState.neonStructures = [];
     
-    for (let i = 0; i < 12; i++) {
+    for (let i = 0; i < 8; i++) { // Reduced from 12
         const height = Math.random() * 18 + 10;
         const geometry = new THREE.BoxGeometry(2, height, 2);
         const color = Math.random() > 0.5 ? 0x00ffff : 0xff0066;
@@ -973,7 +1152,7 @@ function createNeonStructures() {
 function createStarfield() {
     // Optimized single star layer
     const starGeometry = new THREE.BufferGeometry();
-    const starCount = 800;
+    const starCount = 400; // Reduced from 800
     const positions = new Float32Array(starCount * 3);
     
     for (let i = 0; i < starCount * 3; i += 3) {
@@ -1001,10 +1180,12 @@ function initControls() {
     // Use gameState.keys instead of local variable
     
     document.addEventListener('keydown', (e) => {
+        // Prevent key repeat for movement keys
+        if (['w', 'a', 's', 'd'].includes(e.key.toLowerCase()) && gameState.keys[e.key.toLowerCase()]) {
+            return;
+        }
         gameState.keys[e.key.toLowerCase()] = true;
         
-        // Debug: Log all key presses
-        console.log('Key pressed:', e.key, 'Keys state:', gameState.keys);
         
         // Slow motion (Q key instead of Space)
         if (e.key.toLowerCase() === 'q' && gameState.gameStarted && !gameState.slowMotion.active && gameState.slowMotion.cooldownLeft <= 0) {
@@ -1019,11 +1200,8 @@ function initControls() {
         
         // Toggle flying (F)
         if (e.key.toLowerCase() === 'f') {
-            console.log('F key detected! Game started:', gameState.gameStarted, 'Current flying state:', gameState.player.isFlying);
             if (gameState.gameStarted) {
                 toggleFlying();
-            } else {
-                console.log('Cannot fly - game not started yet!');
             }
         }
         
@@ -1031,6 +1209,35 @@ function initControls() {
         if (e.key.toLowerCase() === 'v') {
             toggleMute();
         }
+        
+        // Enhanced controls
+        if (e.key.toLowerCase() === 'tab') {
+            switchWeapon();
+            e.preventDefault();
+        }
+        
+        if (e.key.toLowerCase() === 'e') {
+            performDash();
+            e.preventDefault();
+        }
+        
+    // Toggle FPS display (F1)
+    if (e.key === 'F1') {
+        toggleFPSDisplay();
+        e.preventDefault();
+    }
+    
+    // Reset player position (R key)
+    if (e.key.toLowerCase() === 'r' && gameState.gameStarted) {
+        resetPlayerPosition();
+        e.preventDefault();
+    }
+    
+    // Clear stuck keys (K key)
+    if (e.key.toLowerCase() === 'k' && gameState.gameStarted) {
+        clearStuckKeys();
+        e.preventDefault();
+    }
         
         // Handle space for flying (prevent default only when flying)
         if (e.key === ' ' && gameState.player.isFlying) {
@@ -1040,7 +1247,12 @@ function initControls() {
     
     document.addEventListener('keyup', (e) => {
         gameState.keys[e.key.toLowerCase()] = false;
-        console.log('Key released:', e.key, 'Keys state:', gameState.keys);
+        // Also clear any stuck keys
+        if (['w', 'a', 's', 'd'].includes(e.key.toLowerCase())) {
+            setTimeout(() => {
+                gameState.keys[e.key.toLowerCase()] = false;
+            }, 50);
+        }
     });
     
     document.addEventListener('mousemove', (e) => {
@@ -1142,31 +1354,46 @@ function initMobileControls() {
     });
 }
 
-// Player Movement
+// Enhanced Player Movement
 function updatePlayer() {
+    const delta = gameState.clock.getDelta();
+    
+    // Update dash mechanics
+    if (gameState.player.isDashing) {
+        gameState.player.dashDuration -= delta;
+        if (gameState.player.dashDuration <= 0) {
+            gameState.player.isDashing = false;
+        }
+    }
+    
+    if (gameState.player.dashCooldown > 0) {
+        gameState.player.dashCooldown -= delta;
+    }
+    
     const moveSpeed = gameState.player.isFlying ? gameState.player.flySpeed : gameState.player.speed;
     
     // Rotation
     gameState.camera.rotation.y = -gameState.mouse.x;
     gameState.camera.rotation.x = -gameState.mouse.y;
     
-    // Movement
+    // Movement - Create fresh vectors each frame
     const forward = new THREE.Vector3(0, 0, -1).applyQuaternion(gameState.camera.quaternion);
     const right = new THREE.Vector3(1, 0, 0).applyQuaternion(gameState.camera.quaternion);
+    
     
     if (gameState.player.isFlying) {
         // Flying mode - full 3D movement
         if (gameState.keys['w'] === true) {
-            gameState.player.position.add(forward.multiplyScalar(moveSpeed));
+            gameState.player.position.add(forward.clone().multiplyScalar(moveSpeed));
         }
         if (gameState.keys['s'] === true) {
-            gameState.player.position.add(forward.multiplyScalar(-moveSpeed));
+            gameState.player.position.add(forward.clone().multiplyScalar(-moveSpeed));
         }
         if (gameState.keys['a'] === true) {
-            gameState.player.position.add(right.multiplyScalar(-moveSpeed));
+            gameState.player.position.add(right.clone().multiplyScalar(-moveSpeed));
         }
         if (gameState.keys['d'] === true) {
-            gameState.player.position.add(right.multiplyScalar(moveSpeed));
+            gameState.player.position.add(right.clone().multiplyScalar(moveSpeed));
         }
         
         // Vertical movement in flying mode
@@ -1197,16 +1424,16 @@ function updatePlayer() {
         right.normalize();
         
         if (gameState.keys['w'] === true) {
-            gameState.player.position.add(forward.multiplyScalar(moveSpeed));
+            gameState.player.position.add(forward.clone().multiplyScalar(moveSpeed));
         }
         if (gameState.keys['s'] === true) {
-            gameState.player.position.add(forward.multiplyScalar(-moveSpeed));
+            gameState.player.position.add(forward.clone().multiplyScalar(-moveSpeed));
         }
         if (gameState.keys['a'] === true) {
-            gameState.player.position.add(right.multiplyScalar(-moveSpeed));
+            gameState.player.position.add(right.clone().multiplyScalar(-moveSpeed));
         }
         if (gameState.keys['d'] === true) {
-            gameState.player.position.add(right.multiplyScalar(moveSpeed));
+            gameState.player.position.add(right.clone().multiplyScalar(moveSpeed));
         }
         
         gameState.player.position.y = 2;
@@ -1229,7 +1456,7 @@ function shootRepulsor() {
     gameState.totalShots++;
     updateHUD();
     
-    // Play real repulsor sound
+    // Play repulsor sound
     playAudioFile('repulsor');
     
     const direction = new THREE.Vector3(0, 0, -1).applyQuaternion(gameState.camera.quaternion);
@@ -1257,6 +1484,77 @@ function shootRepulsor() {
     createShootTrail(gameState.camera.position, direction);
 }
 
+// Enhanced Weapon System
+function switchWeapon() {
+    const weapons = ['repulsor', 'beam', 'missile'];
+    const currentIndex = weapons.indexOf(gameState.player.weaponMode);
+    gameState.player.weaponMode = weapons[(currentIndex + 1) % weapons.length];
+    
+    showNotification(`🔫 ${gameState.player.weaponMode.toUpperCase()} MODE`, '#00ffff');
+    // Removed dash sound
+}
+
+function performDash() {
+    if (gameState.player.dashCooldown > 0 || gameState.player.energy < 20) return;
+    
+    gameState.player.dashCooldown = 2; // 2 second cooldown
+    gameState.player.energy -= 20;
+    gameState.player.isDashing = true;
+    gameState.player.dashDuration = 0.3; // 0.3 second dash
+    
+    // Dash direction based on movement
+    const direction = new THREE.Vector3(0, 0, 0);
+    if (gameState.keys['w']) direction.z -= 1;
+    if (gameState.keys['s']) direction.z += 1;
+    if (gameState.keys['a']) direction.x -= 1;
+    if (gameState.keys['d']) direction.x += 1;
+    
+    if (direction.length() === 0) {
+        direction.z = -1; // Default forward dash
+    }
+    
+    direction.normalize();
+    direction.applyQuaternion(gameState.camera.quaternion);
+    
+    // Apply dash velocity
+    gameState.player.velocity.add(direction.multiplyScalar(gameState.player.dashSpeed));
+    
+    // Visual effects
+    createDashEffect();
+    // Removed dash sound
+    showNotification('⚡ DASH!', '#ffffff');
+    
+    updateHUD();
+}
+
+function createDashEffect() {
+    // Create dash trail particles
+    for (let i = 0; i < 5; i++) {
+        const geometry = new THREE.SphereGeometry(0.1, 8, 8);
+        const material = new THREE.MeshBasicMaterial({
+            color: 0x00ffff,
+            transparent: true,
+            opacity: 0.8
+        });
+        const particle = new THREE.Mesh(geometry, material);
+        
+        const offset = new THREE.Vector3(
+            (Math.random() - 0.5) * 2,
+            (Math.random() - 0.5) * 2,
+            (Math.random() - 0.5) * 2
+        );
+        
+        particle.position.copy(gameState.camera.position).add(offset);
+        
+        gameState.scene.add(particle);
+        gameState.particles.push({
+            mesh: particle,
+            velocity: new THREE.Vector3(0, 0, 0),
+            lifetime: 0.5
+        });
+    }
+}
+
 function activateSlowMotion() {
     gameState.slowMotion.active = true;
     gameState.slowMotion.timeLeft = gameState.slowMotion.duration;
@@ -1264,13 +1562,13 @@ function activateSlowMotion() {
     
     // Visual effect
     document.body.style.filter = 'hue-rotate(180deg) saturate(1.5)';
-    playSound(200, 0.3, 'sine');
+    // Removed explosion sound
 }
 
 function deactivateSlowMotion() {
     gameState.slowMotion.active = false;
     document.body.style.filter = 'none';
-    playSound(400, 0.2, 'sine');
+    // Removed deactivation sound
 }
 
 function toggleFlying() {
@@ -1280,7 +1578,7 @@ function toggleFlying() {
     
     if (gameState.player.isFlying) {
         // Entering flying mode
-        playSound(800, 0.2, 'sine');
+        // Removed flying sound
         showNotification('🚀 FLIGHT MODE ACTIVATED', '#ffffff');
         if (flightModeElement) {
             flightModeElement.textContent = 'FLYING';
@@ -1289,7 +1587,7 @@ function toggleFlying() {
         console.log('Flight mode activated');
     } else {
         // Exiting flying mode
-        playSound(400, 0.2, 'sine');
+        // Removed landing sound
         showNotification('🏃 GROUND MODE', '#888888');
         gameState.player.verticalVelocity = 0;
         if (flightModeElement) {
@@ -1352,7 +1650,7 @@ function shootMissileBarrage() {
     gameState.missiles.cooldownLeft = gameState.missiles.cooldown;
     updateHUD();
     
-    // Play missile sound once
+    // Play missile sound
     playAudioFile('missile');
     
     // Launch 5 missiles
@@ -1410,7 +1708,7 @@ function shootBeam() {
     gameState.totalShots++;
     updateHUD();
     
-    // Play same repulsor sound as normal attack
+    // Play repulsor sound for beam
     playAudioFile('repulsor');
     
     const direction = new THREE.Vector3(0, 0, -1).applyQuaternion(gameState.camera.quaternion);
@@ -1541,7 +1839,7 @@ function createMuzzleFlash() {
 
 function createShootTrail(startPos, direction) {
     // Reduced trail particles for performance
-    for (let i = 0; i < 3; i++) {
+    for (let i = 0; i < 2; i++) {
         const geometry = new THREE.SphereGeometry(0.08, 4, 4);
         const material = new THREE.MeshBasicMaterial({
             color: 0x00ffff,
@@ -2047,7 +2345,7 @@ function damagePlayer(damage) {
 }
 
 function createHitEffect(position) {
-    const particleCount = 6;
+    const particleCount = 4;
     
     for (let i = 0; i < particleCount; i++) {
         const geometry = new THREE.SphereGeometry(0.15, 8, 8);
@@ -2078,7 +2376,7 @@ function createHitEffect(position) {
 }
 
 function createExplosion(position) {
-    const particleCount = 25;
+    const particleCount = 15;
     
     // Main explosion particles
     for (let i = 0; i < particleCount; i++) {
@@ -2301,6 +2599,44 @@ function updateHUD() {
     document.getElementById('enemy-value').textContent = gameState.enemies.length;
     document.getElementById('wave-value').textContent = gameState.currentWave;
     document.getElementById('kill-value').textContent = gameState.killCount;
+    
+    // Enhanced HUD elements
+    updateWeaponDisplay();
+    updateDashCooldown();
+    updateExperienceBar();
+}
+
+function updateWeaponDisplay() {
+    const weaponElement = document.getElementById('weapon-mode');
+    if (weaponElement) {
+        weaponElement.textContent = gameState.player.weaponMode.toUpperCase();
+    }
+}
+
+function updateDashCooldown() {
+    const dashElement = document.getElementById('dash-cooldown');
+    if (dashElement) {
+        if (gameState.player.dashCooldown > 0) {
+            dashElement.textContent = `DASH: ${gameState.player.dashCooldown.toFixed(1)}s`;
+            dashElement.style.color = '#ff0000';
+        } else {
+            dashElement.textContent = 'DASH: READY';
+            dashElement.style.color = '#00ff00';
+        }
+    }
+}
+
+function updateExperienceBar() {
+    const expElement = document.getElementById('experience-bar');
+    if (expElement) {
+        const expPercent = (gameState.player.experience % 100);
+        expElement.style.width = expPercent + '%';
+    }
+    
+    const levelElement = document.getElementById('level-display');
+    if (levelElement) {
+        levelElement.textContent = `LVL ${gameState.player.level}`;
+    }
 }
 
 function updateBossHealth() {
@@ -2351,9 +2687,7 @@ function victory() {
     document.getElementById('final-time').textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
     
     // Victory sound
-    playSound(523, 0.3, 'sine');
-    setTimeout(() => playSound(659, 0.3, 'sine'), 300);
-    setTimeout(() => playSound(784, 0.5, 'sine'), 600);
+    // Removed victory sound sequence
     
     document.getElementById('victory-screen').style.display = 'flex';
 }
@@ -2454,7 +2788,7 @@ function updatePickups(delta) {
 }
 
 function collectPickup(pickup, index) {
-    playSound(800, 0.2, 'sine');
+    // Removed game over sound
     
     if (pickup.type === 'health') {
         gameState.player.health = Math.min(gameState.player.maxHealth, gameState.player.health + 30);
@@ -2622,5 +2956,168 @@ function animate() {
         gameState.ground.material.opacity = 0.6 + Math.sin(time * 0.5) * 0.1;
     }
     
+    // Enhanced visual effects
+    updateWeatherEffects(delta);
+    updateDynamicLighting(delta);
+    updatePostProcessing(delta);
+    
+    // Simple FPS tracking
+    updateFPSDisplay();
+    
     gameState.renderer.render(gameState.scene, gameState.camera);
+}
+
+// Enhanced Visual Effects
+function updateWeatherEffects(delta) {
+    if (gameState.weather.type === 'storm') {
+        createLightningEffect();
+    } else if (gameState.weather.type === 'fog') {
+        updateFogEffect();
+    } else if (gameState.weather.type === 'snow') {
+        createSnowEffect();
+    }
+}
+
+function createLightningEffect() {
+    if (Math.random() < 0.01) { // 1% chance per frame
+        // Flash the screen
+        document.body.style.background = 'radial-gradient(circle, rgba(255,255,255,0.8) 0%, rgba(255,255,255,0.2) 100%)';
+        setTimeout(() => {
+            document.body.style.background = '#000';
+        }, 100);
+        
+        // Add lightning sound
+        // Removed lightning sound
+    }
+}
+
+function updateFogEffect() {
+    const intensity = gameState.weather.intensity;
+    gameState.scene.fog.density = 0.015 + intensity * 0.01;
+}
+
+function createSnowEffect() {
+    if (Math.random() < 0.05) { // Reduced chance for performance
+        const snowflake = createSnowflake();
+        snowflake.position.set(
+            (Math.random() - 0.5) * 100,
+            50,
+            (Math.random() - 0.5) * 100
+        );
+        gameState.scene.add(snowflake);
+        
+        gameState.particles.push({
+            mesh: snowflake,
+            velocity: new THREE.Vector3(0, -0.1, 0),
+            lifetime: 10
+        });
+    }
+}
+
+function createSnowflake() {
+    const geometry = new THREE.SphereGeometry(0.1, 4, 4);
+    const material = new THREE.MeshBasicMaterial({
+        color: 0xffffff,
+        transparent: true,
+        opacity: 0.8
+    });
+    return new THREE.Mesh(geometry, material);
+}
+
+function updateDynamicLighting(delta) {
+    if (!gameState.dynamicLighting) return;
+    
+    const time = Date.now() * 0.001;
+    
+    // Update time of day
+    gameState.timeOfDay += delta * 0.0001; // Very slow progression
+    if (gameState.timeOfDay > 1) gameState.timeOfDay = 0;
+    
+    // Update ambient light based on time of day
+    const ambientLight = gameState.scene.children.find(child => child.type === 'AmbientLight');
+    if (ambientLight) {
+        const dayIntensity = Math.sin(gameState.timeOfDay * Math.PI * 2) * 0.3 + 0.5;
+        ambientLight.intensity = dayIntensity;
+    }
+}
+
+function updatePostProcessing(delta) {
+    if (!gameState.postProcessing.bloom) return;
+    
+    // Simple bloom effect using screen flash
+    if (Math.random() < 0.001) { // Very rare bloom flashes
+        document.body.style.filter = 'brightness(1.2) saturate(1.1)';
+        setTimeout(() => {
+            document.body.style.filter = 'none';
+        }, 50);
+    }
+}
+
+// Simple Performance Tracking
+function updatePerformanceStats() {
+    const currentTime = Date.now();
+    gameState.performance.frameCount++;
+    
+    if (currentTime - gameState.performance.lastTime >= 1000) {
+        gameState.performance.fps = Math.round((gameState.performance.frameCount * 1000) / (currentTime - gameState.performance.lastTime));
+        gameState.performance.frameCount = 0;
+        gameState.performance.lastTime = currentTime;
+    }
+}
+
+function updateFPSDisplay() {
+    if (!gameState.ui.showFPS) return;
+    
+    let fpsElement = document.getElementById('fps-display');
+    if (!fpsElement) {
+        fpsElement = document.createElement('div');
+        fpsElement.id = 'fps-display';
+        fpsElement.style.position = 'fixed';
+        fpsElement.style.top = '10px';
+        fpsElement.style.right = '10px';
+        fpsElement.style.color = '#00ff00';
+        fpsElement.style.fontFamily = 'Orbitron, monospace';
+        fpsElement.style.fontSize = '14px';
+        fpsElement.style.zIndex = '9999';
+        document.body.appendChild(fpsElement);
+    }
+    
+    const color = gameState.performance.fps >= 60 ? '#00ff00' : 
+                  gameState.performance.fps >= 30 ? '#ffff00' : '#ff0000';
+    fpsElement.style.color = color;
+    fpsElement.textContent = `FPS: ${gameState.performance.fps}`;
+}
+
+// Toggle FPS display with F key
+function toggleFPSDisplay() {
+    gameState.ui.showFPS = !gameState.ui.showFPS;
+    const fpsElement = document.getElementById('fps-display');
+    if (fpsElement) {
+        fpsElement.style.display = gameState.ui.showFPS ? 'block' : 'none';
+    }
+}
+
+// Reset player position and state
+function resetPlayerPosition() {
+    gameState.player.position.set(0, 2, 0);
+    gameState.player.isFlying = false;
+    gameState.player.verticalVelocity = 0;
+    gameState.mouse.x = 0;
+    gameState.mouse.y = 0;
+    gameState.keys = {};
+    
+    if (gameState.camera) {
+        gameState.camera.position.copy(gameState.player.position);
+        gameState.camera.rotation.set(0, 0, 0);
+    }
+    
+    showNotification('🔄 POSITION RESET', '#00ffff');
+}
+
+// Clear stuck movement keys
+function clearStuckKeys() {
+    ['w', 'a', 's', 'd'].forEach(key => {
+        gameState.keys[key] = false;
+    });
+    showNotification('🔧 KEYS CLEARED', '#00ffff');
 }
